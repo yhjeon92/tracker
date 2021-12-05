@@ -19,10 +19,11 @@ import org.xml.sax.InputSource;
 @SpringBootApplication
 public class Entrypoint {
   public static void main(String[] args) {
-    //System.out.println(args[0]);
-    //SpringApplication.run(Entrypoint.class, args);
+    SpringApplication.run(Entrypoint.class, args);
+  }
 
-    String filePath = "C:\\Users\\Jeon Yeonghun\\Desktop\\2021-07-17T15_32_00_Zeopoxa_Cycling.gpx";
+  private static void parseGpx(String filePath) {
+    filePath = "C:\\Users\\Jeon Yeonghun\\Desktop\\2021-07-17T15_32_00_Zeopoxa_Cycling.gpx";
     String outputFilePath = "C:\\Users\\Jeon Yeonghun\\Desktop\\MyOutput.txt";
 
     Document xml = null;
@@ -86,16 +87,16 @@ public class Entrypoint {
           if (!ele.isEmpty() && !time.isEmpty()) {
             String jsonObject =
                 "        {\n" +
-                "            \"type\": \"Feature\",\n" +
-                "            \"properties\": {\n" +
-                "                \"popupContent\": \"Elevation " + ele + "m, @" + time + "\"\n" +
-                "            },\n" +
-                "            \"geometry\": {\n" +
-                "                \"type\": \"Point\",\n" +
-                "                \"coordinates\": [" + longitude + ", " + latitude + "]" + "\n" +
-                "            },\n" +
-                "            \"id\": " + idCount++ + "\n" +
-                "        },";
+                    "            \"type\": \"Feature\",\n" +
+                    "            \"properties\": {\n" +
+                    "                \"popupContent\": \"Elevation " + ele + "m, @" + time + "\"\n" +
+                    "            },\n" +
+                    "            \"geometry\": {\n" +
+                    "                \"type\": \"Point\",\n" +
+                    "                \"coordinates\": [" + longitude + ", " + latitude + "]" + "\n" +
+                    "            },\n" +
+                    "            \"id\": " + idCount++ + "\n" +
+                    "        },";
             os.write(jsonObject.getBytes());
           }
         }
@@ -103,23 +104,9 @@ public class Entrypoint {
 
       os.close();
 
-//
-//
-//      System.out.println(trkpts.getLength());
-//      for (int i = 0; i < trkpts.getLength(); i++) {
-//        if (trkpts.item(i).getNodeName().equals("trkpt")) {
-//          Node latitude = trkpts.item(i).getAttributes().getNamedItem("lat");
-//          Node longitude = trkpts.item(i).getAttributes().getNamedItem("lon");
-//          System.out.println("                    [" + longitude.getNodeValue() + ", "
-//              + latitude.getNodeValue() + "],");
-//
-//        }
-//      }
-
     } catch (Exception exception) {
       exception.printStackTrace();
     }
-
   }
 
   private static void printNodeNames(NodeList nodeList) {
