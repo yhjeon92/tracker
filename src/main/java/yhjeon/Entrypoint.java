@@ -1,13 +1,9 @@
 package yhjeon;
 
+import java.io.FileReader;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import java.io.FileReader;
-import java.io.IOException;
 
 import javax.xml.parsers.*;
 import org.w3c.dom.Document;
@@ -114,5 +110,4 @@ public class Entrypoint {
       System.out.println(nodeList.item(i).getNodeName());
     }
   }
-
 }
