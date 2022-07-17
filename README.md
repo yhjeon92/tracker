@@ -1,8 +1,28 @@
-# tracker
+# jaranee
 
-Leaflet
-SpringBoot
-Maven
+Run a server to visualize your `.gpx` files on web browser.
 
-GeoJSON
-Zeopoxa
+#### Powered by:
+- [leaflet.js] (https://leafletjs.com/)
+- [plotly.js] (https://plotly.com/javascript/)
+- [OpenStreetMap] (https://www.openstreetmap.org/)
+- [Flask] (https://flask.palletsprojects.com/)
+
+## Prerequisites
+
+- Python
+
+## Getting started
+
+```shell
+$ pip install -r requirements.txt
+$ python main.py
+```
+
+Open a web browser, connect to http://127.0.0.1/index.html to check it's properly working.
+
+#### Building python stub from .proto manifest
+
+```shell
+$ protoc -I . --python_out . gpx.proto
+```
