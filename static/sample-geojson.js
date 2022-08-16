@@ -5,15 +5,17 @@ var map = L.map('map').setView([37.39903, 127.11152], 11);
 
 const OSMUrlFormat = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const mapBoxUrlFormat = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const naverMapUrlFormat = 'https://map.pstatic.net/nrb/styles/basic/1655974504/{z}/{x}/{y}.png'
-const cyclosmMapUrlFormat = 'https://a.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
+const googleMapUrlFormat = 'https://mt0.google.com/vt/lyrs=m&hl=kr&x={x}&y={y}&z={z}';
+const VWUrlFormat = 'http://xdworld.vworld.kr:8080/2d/Satellite/201301/{z}/{x}/{y}.jpeg'
 const mapLayoutOptions = {
 	maxZoom: 18,
 	attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
 		'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
 	id: 'mapbox/light-v9',
-	tileSize: 512,
-	zoomOffset: -1,
+	tileSize: 256,
+	zoomOffset: 0,
+	// tileSize: 512,
+	// zoomOffset: -1,
 	detectRetina: true
 };
 
