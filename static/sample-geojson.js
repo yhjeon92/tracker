@@ -6,9 +6,10 @@ var map = L.map('map').setView([37.39903, 127.11152], 11);
 const OSMUrlFormat = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const mapBoxUrlFormat = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const googleMapUrlFormat = 'https://mt0.google.com/vt/lyrs=m&hl=kr&x={x}&y={y}&z={z}';
-const VWUrlFormat = 'http://xdworld.vworld.kr:8080/2d/Satellite/201301/{z}/{x}/{y}.jpeg'
+const VWUrlFormat = 'http://xdworld.vworld.kr:8080/2d/Satellite/201612/{z}/{x}/{y}.jpeg'
 const mapLayoutOptions = {
-	maxZoom: 18,
+	minZoom: 8,
+	maxZoom: 17,
 	attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
 		'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
 	id: 'mapbox/light-v9',
@@ -19,7 +20,8 @@ const mapLayoutOptions = {
 	detectRetina: true
 };
 
-var mapLayer = L.tileLayer(OSMUrlFormat, mapLayoutOptions).addTo(map);
+var mapLayer = L.tileLayer(OSMUrlFormat, mapLayoutOptions);
+mapLayer.addTo(map);
 
 function onEachFeature(feature, layer) {
 	var popupContent = "<p>Powered by GeoJSON and Leaflet</p>";
