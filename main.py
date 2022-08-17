@@ -26,8 +26,8 @@ def upload_gpx():
         gpxText = file.stream.read()
         sessionId = uuid.uuid1()
 
-        file_sub_path = secure_filename(f'static{os.linesep}{sessionId}.js')
-        path = f'{os.path.join(os.getcwd(), file_sub_path)}'
+        file_name = secure_filename(f'{sessionId}.js')
+        path = os.path.join(os.getcwd(), 'static', file_name)
 
         parser.parse(gpxText, path)
 

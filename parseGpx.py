@@ -55,10 +55,10 @@ def elem_to_coord(element: ET.Element):
 
 
 def parse_data_js(times: list, dist_list: list, velocities: list, elevation_list: list):
-    parsed = """const timestamp = {a};
-const distance = {b};
-const velocity = {c};
-const elevation = {d};""".format(a=json.dumps(times, default=str), b=json.dumps(dist_list), c=json.dumps(velocities), d=json.dumps(elevation_list))
+    parsed = """var timestamp = {a};
+var distance = {b};
+var velocity = {c};
+var elevation = {d};""".format(a=json.dumps(times, default=str), b=json.dumps(dist_list), c=json.dumps(velocities), d=json.dumps(elevation_list))
 
     return parsed
 
@@ -246,8 +246,14 @@ class GpxParser:
         f = open(output_js_path, 'wb')
         date = timestamps[0].strftime('%A, %B %d, %Y')
         f.write(bytes(
-            f'const titleString = "Workout on {date}";\n\n' +
+            f'var titleString = "Workout on {date}";\n\n' +
             f'{parse_data_js(timestamps, dist_covered, velocity, elevations)}\n\n' +
             f'{parse_trail_js(lats, lons, kilometer_stone)}\n\n' +
-            f'{parse_points_js(point_list)}', encoding='utf-8'))
+            f'{parse_points_js(point_list)}\n\n' +
+            'redrawMap();\n\nredrawMarker();\n\n' +
+            'redrawMap();\n\nredrawMarker();\n\n' +
+            'document.getElementById("plotAxisToggle").click();\n\n' +
+            'document.getElementById("plotAxisToggle").click();', encoding='utf-8'))
         f.close()
+
+
