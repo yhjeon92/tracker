@@ -6,4 +6,4 @@
 
 *.iml
 /__pycache__/
-/static/temp/*
+/static/temp/*.js
