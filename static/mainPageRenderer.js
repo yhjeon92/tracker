@@ -131,6 +131,33 @@ document.getElementById('resetView').onclick = resetView;
 document.getElementById('toggleDetail').onclick = redrawMap;
 document.getElementById('toggleMarker').onclick = redrawMarker;
 
+var singlePoint = L.geoJSON();
+
+const drawSingle = (featureSingle) => {
+    singlePoint.clearLayers();
+    singlePoint = L.geoJSON(
+        {
+            type: "FeatureCollection",
+            features: [
+                featureSingle
+            ]
+        }, 
+        {
+            onEachFeature: onEachFeature,
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: 7,
+                    fillColor: "#ff2222",
+                    color: "#000",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            }
+        }
+    );
+    singlePoint.addTo(map);
+}
 
 workoutPlot = document.getElementById('workoutPlot');
 var plot_data = [
@@ -154,6 +181,7 @@ var plot_data = [
 ];
 var plot_layout = {
     margin: { t: 0 },
+    hovermode:'closest',
     xaxis: {
         title: {
             text: "Distance (km)",
@@ -186,6 +214,14 @@ var plot_layout = {
 };
 
 Plotly.newPlot(workoutPlot, plot_data, plot_layout);
+
+workoutPlot.on('plotly_hover', function(data){
+    var index = data.points.map(function(d) { return d.pointNumber });
+    var featureSinglePoint = points['features'][index];
+    drawSingle(featureSinglePoint);
+}).on('plotly_unhover', function(data){
+    singlePoint.clearLayers();
+});
 
 const toTimestamp = () => {
     plot_data[0]['x'] = timestamp;
