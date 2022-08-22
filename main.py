@@ -27,11 +27,11 @@ def upload_gpx():
         sessionId = uuid.uuid1()
 
         file_name = secure_filename(f'{sessionId}.js')
-        path = os.path.join(os.getcwd(), 'static', file_name)
+        path = os.path.join(os.getcwd(), 'static', 'temp', file_name)
 
         parser.parse(gpxText, path)
 
-        return parse_response(200, 200, f'{sessionId}.js', "")
+        return parse_response(200, 200, f'temp/{sessionId}.js', "")
     except Exception as err:
         print('Internal Server Error: ', err)
         return parse_response(500, 500, "Internal Server Error", "Exception encountered while parsing given .gpx file")
