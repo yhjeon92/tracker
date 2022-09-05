@@ -125,7 +125,13 @@ const redrawMarker = () => {
 }
 
 const resetView = () => {
-    map.setView([37.39903, 127.11152], 11);
+    if (points['features'].length > 1) {
+        var yxcoord = points['features'][0]['geometry']['coordinates']
+        map.setView([yxcoord[1], yxcoord[0]], 11);
+    } else {
+        map.setView([37.39903, 127.11152], 11);
+    }
+    
 }
 document.getElementById('resetView').onclick = resetView;
 document.getElementById('toggleDetail').onclick = redrawMap;
