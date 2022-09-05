@@ -5,7 +5,8 @@ var map = L.map('map').setView([37.39903, 127.11152], 11);
 
 const OSMUrlFormat = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const mapBoxUrlFormat = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const googleMapUrlFormat = 'https://mt0.google.com/vt/lyrs=m&hl=kr&x={x}&y={y}&z={z}';
+//const googleMapUrlFormat = 'https://mt0.google.com/vt/lyrs=m&hl=kr&x={x}&y={y}&z={z}';
+const googleMapUrlFormat = 'http://192.168.35.116:8080/{x}_{y}_{z}.png';
 const VWUrlFormat = 'http://xdworld.vworld.kr:8080/2d/Satellite/201612/{z}/{x}/{y}.jpeg'
 const mapLayoutOptions = {
 	minZoom: 8,

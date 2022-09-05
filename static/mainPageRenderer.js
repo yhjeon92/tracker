@@ -182,9 +182,16 @@ var plot_data = [
     {
         name: 'Speed',
         x: distance,
-        y: velocity
+        y: velocity,
+        line: {
+            shape: 'spline',
+            smoothing: 1.5
+        },
+        mode: 'lines',
+        type: 'scatter'
     },
 ];
+
 var plot_layout = {
     margin: { t: 0 },
     hovermode:'closest',
@@ -220,6 +227,18 @@ var plot_layout = {
 };
 
 Plotly.newPlot(workoutPlot, plot_data, plot_layout);
+const redrawWorkoutPlot = (dist_new, time_new, elev_new, velo_new) => {
+    if (document.getElementById("plotAxisToggle").value === "To distance") {
+        plot_data[0]['x'] = time_new;
+        plot_data[1]['x'] = time_new;
+    } else {
+        plot_data[0]['x'] = dist_new;
+        plot_data[1]['x'] = dist_new;
+    }
+    plot_data[0]['y'] = elev_new;
+    plot_data[1]['y'] = velo_new;
+    Plotly.redraw(workoutPlot);
+}
 
 workoutPlot.on('plotly_hover', function(data){
     var index = data.points.map(function(d) { return d.pointNumber });
@@ -269,11 +288,25 @@ const submit = () => {
             body: formData
         }).then(res => res.json())
             .then(res => {
-                console.log(res.message);
-                let scriptEle = document.createElement("script");
-                document.body.appendChild(scriptEle);
-                scriptEle.setAttribute("src", "/" + res.message);
-                scriptEle.setAttribute("type", "text/javascript");
+                titleString = res['titleString'];
+                points = res['points'];
+                trail = res['trail'];
+                timestamp = res['timestamp'];
+                distance = res['distance'];
+                elevation = res['elevation'];
+                velocity = res['velocity'];
+                redrawMap();
+                redrawMarker();
+                redrawMap();
+                redrawMarker();
+                resetView();
+                redrawWorkoutPlot(distance, timestamp, elevation, velocity);
+
+                // console.log(res.message);
+                // let scriptEle = document.createElement("script");
+                // document.body.appendChild(scriptEle);
+                // scriptEle.setAttribute("src", "/" + res.message);
+                // scriptEle.setAttribute("type", "text/javascript");
             }).catch((error) => ("Something went wrong!", error));
     };
 };

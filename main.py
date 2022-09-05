@@ -5,10 +5,12 @@ from parseGpx import GpxParser
 import json, uuid, os, io
 
 
-def parse_response(status: int, code: int, message: str, detail: str):
+def parse_error(status: int, code: int, message: str, detail: str):
     return Response(response=json.dumps({'code': code, 'message': message, 'detail': detail}), status=status,
                     mimetype="application/json")
 
+def parse_response(result: dict):
+    return Response(response=json.dumps(result), status=200, mimetype="application/json")
 
 app = Flask(__name__,
             static_url_path='',
@@ -20,7 +22,7 @@ parser = GpxParser()
 def upload_gpx():
     file = request.files.get("file")
     if file is None:
-        return parse_response(400, 400, "Bad Request", "Request must be a valid multipart/form-data with field named file")
+        return parse_error(400, 400, "Bad Request", "Request must be a valid multipart/form-data with field named file")
 
     try:
         gpxText = file.stream.read()
@@ -29,12 +31,13 @@ def upload_gpx():
         file_name = secure_filename(f'{sessionId}.js')
         path = os.path.join(os.getcwd(), 'static', 'temp', file_name)
 
-        parser.parse(gpxText, path)
-
-        return parse_response(200, 200, f'temp/{sessionId}.js', "")
+        result_dict = parser.parse(gpxText, path)
+        
+        return parse_response(result_dict)
+        #return parse_response(f'temp/{sessionId}.js')
     except Exception as err:
         print('Internal Server Error: ', err)
-        return parse_response(500, 500, "Internal Server Error", "Exception encountered while parsing given .gpx file")
+        return parse_error(500, 500, "Internal Server Error", "Exception encountered while parsing given .gpx file")
 
 
 @app.route('/', methods=["GET"])
@@ -44,4 +47,4 @@ def index_page():
 
 if __name__ == "__main__":
     CORS(app)
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=80, debug=True)

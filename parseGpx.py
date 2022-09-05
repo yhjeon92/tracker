@@ -85,10 +85,11 @@ def parse_trail_js(latitude: list, longitude: list, kilometer_stone: list):
 
     result = {"type": "FeatureCollection", 'features': feature_list}
 
-    return "var trail = " + json.dumps(result) + ";"
+    return result
+    #return json.dumps(result)
 
 
-def parse_points_js(pb2_point_list: list) -> str:
+def parse_points_js(pb2_point_list: list):
     feature_list = list()
     for ind in range(len(pb2_point_list)):
         pb2_point = pb2_point_list[ind]
@@ -99,7 +100,8 @@ def parse_points_js(pb2_point_list: list) -> str:
 
     result = {'type': 'FeatureCollection', 'features': feature_list}
 
-    return "var points = " + json.dumps(result) + ";"
+    return result
+    #return json.dumps(result)
 
 
 def get_elevation(element: ET.Element):
@@ -108,10 +110,10 @@ def get_elevation(element: ET.Element):
 
 def get_time(element: ET.Element):
     try:
-        dt_parsed = dt.strptime(element[1].text, '%Y-%m-%dT%H:%M:%S')
+        dt_parsed = dt.strptime(element[1].text, '%Y-%m-%dT%H:%M:%S.%f')
     except:
         try:
-            dt_parsed = dt.strptime(element[1].text, '%Y-%m-%dT%H:%M:%S.%fZ')
+            dt_parsed = dt.strptime(element[1].text, '%Y-%m-%dT%H:%M:%S')
         except:
             return None
 
@@ -191,11 +193,11 @@ class GpxParser:
             if not dist > 100:
                 total_dist += dist
                 dist_margin += dist
-                total_seconds += timedelta.seconds
-                velocity.append(3.6 * dist / timedelta.seconds)
+                total_seconds += (timedelta.seconds + 0.000001 * timedelta.microseconds)
+                velocity.append(3.6 * dist / (timedelta.seconds + 0.000001 * timedelta.microseconds))
                 timestamps.append(get_time(data[i]))
                 elevations.append(get_elevation(data[i]))
-                dist_covered.append(round(total_dist / 1000, 2))
+                dist_covered.append(round(total_dist / 1000, 4))
                 if len(elevations) > 1 and elevations[-1] > elevations[-2]:
                     elevation_gained += (elevations[-1] - elevations[-2])
                 single_point = pb2.Point()
@@ -205,7 +207,7 @@ class GpxParser:
                 single_point.latitude = end[0]
                 single_point.longitude = end[1]
                 single_point.elevation = end[2]
-                single_point.speed = dist / timedelta.seconds
+                single_point.speed = dist / (timedelta.seconds + 0.000001 * timedelta.microseconds)
                 single_point.distance = dist
                 point_list.append(single_point)
 
@@ -221,6 +223,7 @@ class GpxParser:
                 kilometer_stone.append([x, y])
 
         max_vel = max(velocity)
+        total_seconds = int(total_seconds)
 
         print(f'Total distance covered: {round(total_dist)} m')
         print(f'Total elapsed time(s): {total_seconds} s')
@@ -248,12 +251,22 @@ class GpxParser:
         f.write(bytes(
             f'var titleString = "Workout on {date}";\n\n' +
             f'{parse_data_js(timestamps, dist_covered, velocity, elevations)}\n\n' +
-            f'{parse_trail_js(lats, lons, kilometer_stone)}\n\n' +
-            f'{parse_points_js(point_list)}\n\n' +
+            f'var trail = {json.dumps(parse_trail_js(lats, lons, kilometer_stone))};\n\n' +
+            f'var points = {json.dumps(parse_points_js(point_list))};\n\n' +
             'redrawMap();\n\nredrawMarker();\n\n' +
             'redrawMap();\n\nredrawMarker();\n\n' +
             'document.getElementById("plotAxisToggle").click();\n\n' +
             'document.getElementById("plotAxisToggle").click();', encoding='utf-8'))
         f.close()
-
-
+        
+        result_dict = dict()
+        result_dict['titleString'] = date
+        result_dict['timestamp'] = list(map(lambda x: str(x), timestamps))
+        result_dict['distance'] = dist_covered
+        result_dict['velocity'] = velocity
+        result_dict['elevation'] = elevations
+        
+        result_dict['trail'] = parse_trail_js(lats, lons, kilometer_stone)
+        result_dict['points'] = parse_points_js(point_list)
+        
+        return result_dict
