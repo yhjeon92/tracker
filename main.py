@@ -34,7 +34,6 @@ def upload_gpx():
         result_dict = parser.parse(gpxText, path)
         
         return parse_response(result_dict)
-        #return parse_response(f'temp/{sessionId}.js')
     except Exception as err:
         print('Internal Server Error: ', err)
         return parse_error(500, 500, "Internal Server Error", "Exception encountered while parsing given .gpx file")

@@ -301,12 +301,6 @@ const submit = () => {
                 redrawMarker();
                 resetView();
                 redrawWorkoutPlot(distance, timestamp, elevation, velocity);
-
-                // console.log(res.message);
-                // let scriptEle = document.createElement("script");
-                // document.body.appendChild(scriptEle);
-                // scriptEle.setAttribute("src", "/" + res.message);
-                // scriptEle.setAttribute("type", "text/javascript");
             }).catch((error) => ("Something went wrong!", error));
     };
 };

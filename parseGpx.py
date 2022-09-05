@@ -86,7 +86,6 @@ def parse_trail_js(latitude: list, longitude: list, kilometer_stone: list):
     result = {"type": "FeatureCollection", 'features': feature_list}
 
     return result
-    #return json.dumps(result)
 
 
 def parse_points_js(pb2_point_list: list):
@@ -101,7 +100,6 @@ def parse_points_js(pb2_point_list: list):
     result = {'type': 'FeatureCollection', 'features': feature_list}
 
     return result
-    #return json.dumps(result)
 
 
 def get_elevation(element: ET.Element):
