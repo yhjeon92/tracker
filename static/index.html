@@ -2,26 +2,21 @@
 <head>
     <title>Just a sample...</title>
     <link rel="stylesheet" href="./leaflet.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="./leaflet.js"></script>
     <script src="./plotly-2.12.1.min.js"></script>
     <script src="./result.js"></script>
     <style>
         #map {
-            /* width: 1200px; */
-            /* height: 800px; */
-            align-content: center;
             margin-top: 15px;
             border: 10px;
         }
 
         container {
-            display: block;
-            /* border: 1px solid #B22222; */
             border: none;
             border-radius: 1px;
-            margin: auto;
-            margin-top: 30px;
-            margin-bottom: 30px;
+            /* margin: auto; */
+            padding: 15px;
         }
 
         h1 {
@@ -37,28 +32,55 @@
 </head>
 <body>
     <h1 id='title'>Title</h1>
-    <container id='mapContainer' style="width:1280px;height:960px;">
-        <select name="mapType" id="mapType" onchange="changeMapType()">
-            <option value="none">Choose a map type</option>
-            <option value="openstreetmap" selected>OpenStreetMap</option>
-            <option value="mapbox">Mapbox</option>
-            <option value="google">Google</option>
-            <option value="vw">VW</option>
-        </select>
-        <form id="fileUploadForm" enctype="multipart/form-data">
-        <input id="fileProfile" type="file" name="profile" />
-        <input type="button" value="submit" id="submitButton" />
-        </form>
-        <div id='map' style="width:1200px;height:800px;margin-left:40px;"></div>
-    </container>
-    <input type="button" value="Toggle detail" id="toggleDetail">
-    <input type="button" value="Toggle marker" id="toggleMarker">
-    <input type="button" value="Reset view" id="resetView">
-    <script src="./trail.js"></script>
-    <script src="./sample-geojson.js" type="text/javascript"></script>
-    <container style="width:1200px;height:500px;">
-        <div id="workoutPlot" style="margin-top:15px;margin-bottom:15px;"></div>
-    </container>
-    <input type="button" value="To timestamp" id="plotAxisToggle">
+    <div class="outermost-layout" style=
+    "display:flex; 
+    flex-wrap: wrap;
+    gap: 5%;
+    padding: 30px;
+    width: auto">
+        <container id='mapContainer'
+        class="mapContainer"
+        style="display: flex;
+        flex-basis: 300px;
+        flex-shrink: 1;
+        flex-grow: 1;
+        flex-direction: column;
+        min-width: 300px;
+        height: 100vh;
+        ">
+            <select name="mapType" id="mapType" style="width: 160px" onchange="changeMapType()">
+                <option value="none">Choose a map type</option>
+                <option value="openstreetmap" selected>OpenStreetMap</option>
+                <option value="mapbox">Mapbox</option>
+                <option value="google">Google</option>
+                <option value="vw">VW</option>
+            </select>
+            <form id="fileUploadForm" enctype="multipart/form-data">
+                <input id="fileProfile" type="file" name="profile" />
+                <input type="button" value="submit" id="submitButton" />
+            </form>
+            <div>
+                <input type="button" value="Toggle detail" id="toggleDetail">
+                <input type="button" value="Toggle marker" id="toggleMarker">
+                <input type="button" value="Reset view" id="resetView">
+            </div>
+            <div id='map' style="width:100%;height:100%;margin-left: 40px;"></div>
+        </container>
+        <div 
+        style="display: flex;
+        flex-basis: 300px;
+        flex-shrink: 1;
+        flex-grow: 1;
+        flex-direction: column;
+        height: 100vh;
+        ">
+            <script src="./trail.js"></script>
+            <script src="./sample-geojson.js" type="text/javascript"></script>
+            <container style="width:auto;height:auto;">
+                <div id="workoutPlot" style="padding: 10px;"></div>
+            </container>
+            <input type="button" value="To timestamp" id="plotAxisToggle">
+        </div>
+    </div>
     <script src="./mainPageRenderer.js"></script>
 </body>
