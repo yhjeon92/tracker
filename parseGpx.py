@@ -113,7 +113,10 @@ def get_time(element: ET.Element):
         try:
             dt_parsed = dt.strptime(element[1].text, '%Y-%m-%dT%H:%M:%S')
         except:
-            return None
+            try:
+                dt_parsed = dt.strptime(element[1].text, '%Y-%m-%dT%H:%M:%SZ')
+            except:
+                return None
 
     return dt_parsed
 
@@ -140,8 +143,16 @@ class GpxParser:
         tree = ET.ElementTree(ET.fromstring(text))
 
         root = tree.getroot()
-
+        
         for elem in root.iter():
+            if elem.tag.strip().endswith('gpx'):
+                gpx = elem
+                break
+        
+        if not 'gpx' in locals():
+            gpx = root
+
+        for elem in gpx.iter():
             if elem.tag.strip().endswith('trk'):
                 trk = elem
                 break

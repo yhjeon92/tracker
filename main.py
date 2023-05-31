@@ -2,7 +2,7 @@ from flask import Flask, request, Response, redirect
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 from parseGpx import GpxParser
-import json, uuid, os, io
+import json, uuid, os, io, sys, traceback
 
 
 def parse_error(status: int, code: int, message: str, detail: str):
@@ -35,7 +35,8 @@ def upload_gpx():
         
         return parse_response(result_dict)
     except Exception as err:
-        print('Internal Server Error: ', err)
+        print(traceback.format_exc())
+        print('Internal Server Error: ', err, file=sys.stderr)
         return parse_error(500, 500, "Internal Server Error", "Exception encountered while parsing given .gpx file")
 
 
@@ -46,4 +47,4 @@ def index_page():
 
 if __name__ == "__main__":
     CORS(app)
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='127.0.0.1', port=8080, debug=True)
