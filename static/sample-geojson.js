@@ -10,7 +10,7 @@ const googleMapUrlFormat = 'http://192.168.35.116:8080/{x}_{y}_{z}.png';
 const VWUrlFormat = 'http://xdworld.vworld.kr:8080/2d/Satellite/201612/{z}/{x}/{y}.jpeg'
 const mapLayoutOptions = {
 	minZoom: 8,
-	maxZoom: 17,
+	maxZoom: 19,
 	attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
 		'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
 	id: 'mapbox/light-v9',

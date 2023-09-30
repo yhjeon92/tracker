@@ -1,12 +1,17 @@
 import xml.etree.ElementTree as ET
-from datetime import datetime as dt
-from google.protobuf.timestamp_pb2 import Timestamp
+from datetime import datetime
 import math
 import getopt
 import json
 import sys
 
-import gpx_pb2 as pb2
+
+class Point:
+    def __init__(self, time: datetime, longitude: float, latitude: float, elevation: float):
+        self.time = time
+        self.longitude = longitude
+        self.latitude = latitude
+        self.elevation = elevation
 
 
 def haversine(coord1: object, coord2: object):
@@ -33,7 +38,7 @@ def haversine(coord1: object, coord2: object):
     return meters
 
 
-def get_distance(coord1: object, coord2: object):
+def get_distance_tuple(coord1: object, coord2: object):
     lat1, lon1, ele1 = coord1
     lat2, lon2, ele2 = coord2
 
@@ -51,14 +56,15 @@ def elem_to_coord(element: ET.Element):
     elevation = float(element[0].text)
     time = element[1].text
 
-    return latitude, longitude, elevation
+    return longitude, latitude, elevation
 
 
 def parse_data_js(times: list, dist_list: list, velocities: list, elevation_list: list):
     parsed = """var timestamp = {a};
 var distance = {b};
 var velocity = {c};
-var elevation = {d};""".format(a=json.dumps(times, default=str), b=json.dumps(dist_list), c=json.dumps(velocities), d=json.dumps(elevation_list))
+var elevation = {d};""".format(a=json.dumps(times, default=str), b=json.dumps(dist_list), c=json.dumps(velocities),
+                               d=json.dumps(elevation_list))
 
     return parsed
 
@@ -79,7 +85,7 @@ def parse_trail_js(latitude: list, longitude: list, kilometer_stone: list):
     feature_list.append(trail_obj)
 
     for ind in range(len(kilometer_stone)):
-        single_obj = {'type': 'Feature', 'id': ind + 2, 'properties': {'popupContent': f'{ind+1} km'},
+        single_obj = {'type': 'Feature', 'id': ind + 2, 'properties': {'popupContent': f'{ind + 1} km'},
                       'geometry': {'type': 'Point', 'coordinates': [kilometer_stone[ind][0], kilometer_stone[ind][1]]}}
         feature_list.append(single_obj)
 
@@ -88,14 +94,32 @@ def parse_trail_js(latitude: list, longitude: list, kilometer_stone: list):
     return result
 
 
-def parse_points_js(pb2_point_list: list):
+def parse_trail_js_point(point_list: list, milestone: list):
     feature_list = list()
-    for ind in range(len(pb2_point_list)):
-        pb2_point = pb2_point_list[ind]
-        time_string = pb2_point.time.ToJsonString().split("T")[1].split("Z")[0]
-        feature_list.append({'type': 'Feature', 'id': ind+1,
+    trail_obj = {'type': 'Feature', 'id': 1, 'properties': {'underConstruction': False},
+                 'geometry': {'type': 'LineString', 'coordinates':
+                     [[point.longitude, point.latitude] for point in point_list]}}
+    feature_list.append(trail_obj)
+
+    for ind in range(len(milestone)):
+        single_obj = {'type': 'Feature', 'id': ind + 2, 'properties': {'popupContent': f'{ind + 1} km'},
+                      'geometry': {'type': 'Point', 'coordinates': [milestone[ind][0], milestone[ind][1]]}}
+        feature_list.append(single_obj)
+
+    result = {"type": "FeatureCollection", 'features': feature_list}
+
+    return result
+
+
+def parse_points_js(point_list: list):
+    feature_list = list()
+    for ind in range(len(point_list)):
+        point = point_list[ind]
+        # time_string = point.time.split("T")[1].split("Z")[0]
+        time_string = point.time.strftime("%H:%M:%S")
+        feature_list.append({'type': 'Feature', 'id': ind + 1,
                              'properties': {'popupContent': time_string},
-                             'geometry': {'type': 'Point', 'coordinates': [pb2_point.longitude, pb2_point.latitude]}})
+                             'geometry': {'type': 'Point', 'coordinates': [point.longitude, point.latitude]}})
 
     result = {'type': 'FeatureCollection', 'features': feature_list}
 
@@ -108,13 +132,13 @@ def get_elevation(element: ET.Element):
 
 def get_time(element: ET.Element):
     try:
-        dt_parsed = dt.strptime(element[1].text, '%Y-%m-%dT%H:%M:%S.%f')
+        dt_parsed = datetime.strptime(element[1].text, '%Y-%m-%dT%H:%M:%S.%f')
     except:
         try:
-            dt_parsed = dt.strptime(element[1].text, '%Y-%m-%dT%H:%M:%S')
+            dt_parsed = datetime.strptime(element[1].text, '%Y-%m-%dT%H:%M:%S')
         except:
             try:
-                dt_parsed = dt.strptime(element[1].text, '%Y-%m-%dT%H:%M:%SZ')
+                dt_parsed = datetime.strptime(element[1].text, '%Y-%m-%dT%H:%M:%SZ')
             except:
                 return None
 
@@ -135,6 +159,14 @@ def parse_argv(argv):
     return ""
 
 
+def get_distance(point1: Point, point2: Point):
+    baseline = haversine((point1.latitude, point1.longitude), (point2.latitude, point2.longitude))
+    dist = math.sqrt(baseline ** 2 + (point2.elevation - point1.elevation) ** 2)
+    dist = round(dist, 6)
+
+    return dist
+
+
 class GpxParser:
     def __init__(self):
         pass
@@ -143,12 +175,12 @@ class GpxParser:
         tree = ET.ElementTree(ET.fromstring(text))
 
         root = tree.getroot()
-        
+
         for elem in root.iter():
             if elem.tag.strip().endswith('gpx'):
                 gpx = elem
                 break
-        
+
         if not 'gpx' in locals():
             gpx = root
 
@@ -170,13 +202,13 @@ class GpxParser:
             print("Ill-formatted gpx file: failed to find element with tag 'trkseg'")
             return
 
-        lats = list()
-        lons = list()
+        point_list = list()
 
-        for point in data:
-            coordinates = elem_to_coord(point)
-            lats.append(coordinates[0])
-            lons.append(coordinates[1])
+        for gpx_point in data:
+            coordinates = elem_to_coord(gpx_point)
+            elev = get_elevation(gpx_point)
+            timepoint = get_time(gpx_point)
+            point_list.append(Point(timepoint, coordinates[0], coordinates[1], elev))
 
         velocity = list()
         timestamps = list()
@@ -189,70 +221,109 @@ class GpxParser:
 
         kilometer_stone = list()
         ## in second
-        total_seconds = 0
+        moving_time = 0
         elevation_gained = float(0.0)
-        point_list = list()
 
-        for i in range(1, len(data)):
-            timedelta = get_time(data[i]) - get_time(data[i - 1])
-            start = elem_to_coord(data[i - 1])
-            end = elem_to_coord(data[i])
-            dist = get_distance(end, start)
+        for i in range(1, len(point_list)):
+            timedelta = point_list[i].time - point_list[i - 1].time
+            if timedelta.total_seconds() >= 20.0:
+                print(point_list[i-1].time)
+                print(point_list[i].time)
+                print(timedelta.total_seconds())
+                pass
+            else:
+                dist = get_distance(point_list[i], point_list[i - 1])
+                timedelta_float = timedelta.seconds + 0.000001 * timedelta.microseconds
 
-            if not dist > 100:
                 total_dist += dist
                 dist_margin += dist
-                total_seconds += (timedelta.seconds + 0.000001 * timedelta.microseconds)
-                velocity.append(3.6 * dist / (timedelta.seconds + 0.000001 * timedelta.microseconds))
-                timestamps.append(get_time(data[i]))
-                elevations.append(get_elevation(data[i]))
+
+                moving_time += timedelta_float
+                velocity.append(3.6 * dist / timedelta_float)
+
+                if velocity[-1] >= 90.0:
+                    print("=================================")
+                    print(point_list[i].time)
+                    print(velocity[-1])
+                    print(dist)
+                    print(timedelta_float)
+                    print(point_list[i].latitude)
+                    print(point_list[i].longitude)
+                    print(point_list[i-1].latitude)
+                    print(point_list[i - 1].longitude)
+                    print("=================================")
+
+                timestamps.append(point_list[i].time)
+                elevations.append(point_list[i].elevation)
                 dist_covered.append(round(total_dist / 1000, 4))
+
                 if len(elevations) > 1 and elevations[-1] > elevations[-2]:
                     elevation_gained += (elevations[-1] - elevations[-2])
-                single_point = pb2.Point()
-                pb_dt = Timestamp()
-                pb_dt.FromDatetime(get_time(data[i]))
-                single_point.time.CopyFrom(pb_dt)
-                single_point.latitude = end[0]
-                single_point.longitude = end[1]
-                single_point.elevation = end[2]
-                single_point.speed = dist / (timedelta.seconds + 0.000001 * timedelta.microseconds)
-                single_point.distance = dist
-                point_list.append(single_point)
 
-            if dist_margin > 1000:
-                dist_margin = dist_margin - 1000
-                r = (dist - dist_margin) / dist
-                x_1 = start[1]
-                x_2 = end[1]
-                y_1 = start[0]
-                y_2 = end[0]
-                x = x_1 + r * (x_2 - x_1)
-                y = y_1 + r * (y_2 - y_1)
-                kilometer_stone.append([x, y])
+                if dist_margin > 1000:
+                    dist_margin = dist_margin - 1000
+                    r = (dist - dist_margin) / dist
+                    x_1 = point_list[i - 1].longitude
+                    x_2 = point_list[i].longitude
+                    y_1 = point_list[i - 1].latitude
+                    y_2 = point_list[i].latitude
+                    x = x_1 + r * (x_2 - x_1)
+                    y = y_1 + r * (y_2 - y_1)
+                    kilometer_stone.append([x, y])
+
+        # for i in range(1, len(data)):
+        #     timedelta = get_time(data[i]) - get_time(data[i - 1])
+        #     start = elem_to_coord(data[i - 1])
+        #     end = elem_to_coord(data[i])
+        #     dist = get_distance_tuple(end, start)
+        #
+        #     if not dist > 100:
+        #         total_dist += dist
+        #         dist_margin += dist
+        #         total_seconds += (timedelta.seconds + 0.000001 * timedelta.microseconds)
+        #         velocity.append(3.6 * dist / (timedelta.seconds + 0.000001 * timedelta.microseconds))
+        #         timestamps.append(get_time(data[i]))
+        #         elevations.append(get_elevation(data[i]))
+        #         dist_covered.append(round(total_dist / 1000, 4))
+        #         if len(elevations) > 1 and elevations[-1] > elevations[-2]:
+        #             elevation_gained += (elevations[-1] - elevations[-2])
+        #
+        #         single_point = Point(get_time(data[i]), )
+        #         single_point = pb2.Point()
+        #         single_point.time.CopyFrom(pb_dt)
+        #         single_point.latitude = end[0]
+        #         single_point.longitude = end[1]
+        #         single_point.elevation = end[2]
+        #         single_point.speed = dist / (timedelta.seconds + 0.000001 * timedelta.microseconds)
+        #         single_point.distance = dist
+        #         point_list.append(single_point)
+        #
+        #     if dist_margin > 1000:
+        #         dist_margin = dist_margin - 1000
+        #         r = (dist - dist_margin) / dist
+        #         x_1 = start[1]
+        #         x_2 = end[1]
+        #         y_1 = start[0]
+        #         y_2 = end[0]
+        #         x = x_1 + r * (x_2 - x_1)
+        #         y = y_1 + r * (y_2 - y_1)
+        #         kilometer_stone.append([x, y])
 
         max_vel = max(velocity)
-        total_seconds = int(total_seconds)
+        max_elev = max(elevations)
+        moving_time = int(moving_time)
+        total_time = int((timestamps[-1] - timestamps[0]).total_seconds())
 
         print(f'Total distance covered: {round(total_dist)} m')
-        print(f'Total elapsed time(s): {total_seconds} s')
-        print(f'\tAverage speed (km/h): {round(3.6 * total_dist / total_seconds, 1)}')
+        print(f'Total elapsed time: {total_time} s')
+        print(f'Actual moving time: {moving_time} s')
+        print(f'\tAverage speed (km/h): {round(3.6 * total_dist / moving_time, 1)}')
         print(f'\tMaximum speed (km/h): {round(max_vel, 1)}')
-        print(f'\tTotal elevation (m): {round(elevation_gained, 1)}')
+        print(f'\tMaximum elevation (m): {round(max_elev, 1)}')
+        print(f'\tTotal elevation gained (m): {round(elevation_gained, 1)}')
 
-        result = pb2.Workout()
-        result.data.extend(point_list)
-        result.name = "MyWorkout"
-        pb_dt2 = Timestamp()
-        pb_dt2.FromDatetime(timestamps[-1])
-        result.time.CopyFrom(pb_dt2)
-        result.elapsed = total_seconds
-        result.total_distance = int(round(total_dist, 0))
-
-        ## Write proto binaries
-        # f = open('C:\\Users\\DST02\\Documents\\workout1_proto.txt', 'wb')
-        # f.write(result.SerializeToString())
-        # f.close()
+        trail_dict = parse_trail_js_point(point_list, kilometer_stone)
+        point_dict = parse_points_js(point_list)
 
         ## Write json objects to render graphs
         f = open(output_js_path, 'wb')
@@ -260,22 +331,23 @@ class GpxParser:
         f.write(bytes(
             f'var titleString = "Workout on {date}";\n\n' +
             f'{parse_data_js(timestamps, dist_covered, velocity, elevations)}\n\n' +
-            f'var trail = {json.dumps(parse_trail_js(lats, lons, kilometer_stone))};\n\n' +
-            f'var points = {json.dumps(parse_points_js(point_list))};\n\n' +
+            f'var trail = {json.dumps(trail_dict)};\n\n' +
+            # f'var trail = {json.dumps(parse_trail_js(lats, lons, kilometer_stone))};\n\n' +
+            f'var points = {json.dumps(point_dict)};\n\n' +
             'redrawMap();\n\nredrawMarker();\n\n' +
             'redrawMap();\n\nredrawMarker();\n\n' +
             'document.getElementById("plotAxisToggle").click();\n\n' +
             'document.getElementById("plotAxisToggle").click();', encoding='utf-8'))
         f.close()
-        
+
         result_dict = dict()
         result_dict['titleString'] = date
         result_dict['timestamp'] = list(map(lambda x: str(x), timestamps))
         result_dict['distance'] = dist_covered
         result_dict['velocity'] = velocity
         result_dict['elevation'] = elevations
-        
-        result_dict['trail'] = parse_trail_js(lats, lons, kilometer_stone)
-        result_dict['points'] = parse_points_js(point_list)
-        
+
+        result_dict['trail'] = trail_dict
+        result_dict['points'] = point_dict
+
         return result_dict

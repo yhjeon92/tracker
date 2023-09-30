@@ -21,8 +21,3 @@ $ python main.py
 
 Open a web browser, connect to http://127.0.0.1/index.html to check it's properly working.
 
-#### Building python stub from .proto manifest
-
-```shell
-$ protoc -I . --python_out . gpx.proto
-```
